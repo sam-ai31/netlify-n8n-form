@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chatbot Booking Assistant</title>
+  <title>Regel Suite Booking Assistant</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -29,6 +29,7 @@
       background-color: #007bff;
       color: white;
       align-self: flex-start;
+      position: relative;
     }
 
     .user-message {
@@ -36,6 +37,37 @@
       color: #333;
       align-self: flex-end;
       border: 1px solid #ddd;
+    }
+
+    .typing {
+      width: 60px;
+      height: 20px;
+      position: relative;
+      margin-left: 10px;
+    }
+
+    .typing span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: blink 1.2s infinite;
+    }
+
+    .typing span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes blink {
+      0% { opacity: 0.2; }
+      20% { opacity: 1; }
+      100% { opacity: 0.2; }
     }
 
     input, select, textarea, button {
@@ -77,7 +109,9 @@
 </head>
 <body>
 
-  <div class="chat-container" id="chat"></div>
+  <div class="chat-container" id="chat">
+    <div class="bot-message">Welcome to <strong>Rebel Suite</strong>! How can we assist you today? <span style="font-size:18px">😊</span></div>
+  </div>
 
   <div id="form-container">
     <form id="chatForm" onsubmit="submitForm(event)">
@@ -92,7 +126,7 @@
 
   <script>
     const steps = [
-      { question: "Hi! What's your full name?", name: "name", type: "text" },
+      { question: "What's your full name?", name: "name", type: "text" },
       { question: "Your email address?", name: "email", type: "email" },
       { question: "Which room would you like to book?", name: "room_type", type: "select", options: ["Single", "Double", "VIP", "Family Suite"] },
       { question: "How many guests?", name: "guests", type: "number" },
@@ -109,49 +143,65 @@
     const thankYou = document.getElementById('thankYou');
     const formData = {};
 
+    function showTyping(callback) {
+      const typing = document.createElement('div');
+      typing.className = 'bot-message';
+      typing.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+      chat.appendChild(typing);
+
+      setTimeout(() => {
+        chat.removeChild(typing);
+        callback();
+      }, 1200);
+    }
+
     function showStep() {
-      const step = steps[currentStep];
-      const questionBubble = document.createElement('div');
-      questionBubble.className = 'bot-message';
-      questionBubble.innerText = step.question;
-      chat.appendChild(questionBubble);
+      showTyping(() => {
+        const step = steps[currentStep];
+        const questionBubble = document.createElement('div');
+        questionBubble.className = 'bot-message';
+        questionBubble.innerText = step.question;
+        chat.appendChild(questionBubble);
 
-      const inputWrapper = document.createElement('div');
+        const inputWrapper = document.createElement('div');
+        let inputElement;
 
-      let inputElement;
-      if (step.type === 'select') {
-        inputElement = document.createElement('select');
-        step.options.forEach(opt => {
-          const option = document.createElement('option');
-          option.value = opt;
-          option.innerText = opt;
-          inputElement.appendChild(option);
-        });
-      } else if (step.type === 'textarea') {
-        inputElement = document.createElement('textarea');
-      } else {
-        inputElement = document.createElement('input');
-        inputElement.type = step.type;
-      }
-
-      inputElement.name = step.name;
-      inputElement.required = true;
-      inputElement.placeholder = "Type your answer...";
-      inputWrapper.appendChild(inputElement);
-      stepContainer.innerHTML = '';
-      stepContainer.appendChild(inputWrapper);
-      inputElement.focus();
-
-      inputElement.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          nextStep(inputElement);
+        if (step.type === 'select') {
+          inputElement = document.createElement('select');
+          step.options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.innerText = opt;
+            inputElement.appendChild(option);
+          });
+        } else if (step.type === 'textarea') {
+          inputElement = document.createElement('textarea');
+        } else {
+          inputElement = document.createElement('input');
+          inputElement.type = step.type;
         }
-      });
 
-      if (step.type === 'select') {
-        inputElement.addEventListener('change', () => nextStep(inputElement));
-      }
+        inputElement.name = step.name;
+        inputElement.required = true;
+        inputElement.placeholder = "Type your answer...";
+        inputWrapper.appendChild(inputElement);
+        stepContainer.innerHTML = '';
+        stepContainer.appendChild(inputWrapper);
+        inputElement.focus();
+
+        inputElement.addEventListener('keypress', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            nextStep(inputElement);
+          }
+        });
+
+        if (step.type === 'select') {
+          inputElement.addEventListener('change', () => nextStep(inputElement));
+        }
+
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      });
     }
 
     function nextStep(inputElement) {
@@ -195,11 +245,9 @@
       });
     }
 
-    // Start the chatbot
-    showStep();
+    // Start the bot flow
+    showTyping(() => showStep());
   </script>
 
 </body>
-</html>
-
 </html>
